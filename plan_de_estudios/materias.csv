@@ -1,0 +1,31 @@
+28;Analisis Matematico I;A;6;-1
+3;Fisica (CBC);A;8;-1
+24;ICSE;A;7;-1
+40;IPC;A;9;-1
+5;Quimica (CBC);A;8;-1
+27;Algebra;A;8;-1
+6103;Analisis Matematico II A;H;-1;-1
+6201;Fisica I A;C;8;-1
+7540;Algoritmos I;C;8;-1
+6108;Algebra II A;H;-1;-1
+6203;Fisica II A;P;-1;6103.6201
+6301;Quimica;H;-1;-1
+7541;Algoritmos II;H;-1;-1
+6215;Fisica III D;P;-1;6108.6203.6301
+6602;Laboratorio;P;-1;6203
+6670;Estructura del Computador;P;-1;6108.6203.7541
+7507;Algoritmos III;P;-1;7541
+7512;Analisis Numerico I;P;-1;6103.6108.7541
+6109;Prob y Estadistica B;P;-1;6103.6108
+6110;Analisis Matematico III A;P;-1;6103.6108
+6620;Organizacion de Computadoras;P;-1;6670.6602
+7506;Organizacion de Datos;P;-1;6670.7541
+7542;Taller de Programacion I;P;-1;6670.7541.7512
+7112;Estructura de las Organizaciones;P;-1;7506
+7114;Modelos y Optimizacion I;P;-1;6110.6203.6301.7542
+7508;Sistemas Operativos;P;-1;7506
+7509;Analisis de la Informacion;P;-1;7507.7542
+7510;Tecnicas de Diseño;P;-1;7508.7509
+7515;Base de Datos;P;-1;7506,7509
+7543;Intro a Sistemas Distribuidos;P;-1;6620.6215.7508
+7552;Taller de Programacion II;P;-1;7114.7507.7542
