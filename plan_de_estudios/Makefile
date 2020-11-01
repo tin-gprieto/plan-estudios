@@ -3,12 +3,17 @@ V= valgrind
 GDB= gdb
 CFLAGS= -std=c99 -g -O0
 GFLAGS= -tui
-ARCHIVOS= materias.csv
+ARCHIVOS= txt/materias.csv
 WFLAGS= -Wall -Wconversion -Werror
 VFLAGS= --leak-check=full --track-origins=yes --show-reachable=yes
 
-carrera: main.c materias.c
-	$(CC) main.c materias.c $(CFLAGS) $(WFLAGS) -o carrera
+carrera: code/main.c code/materias.c
+	$(CC) code/main.c code/materias.c $(CFLAGS) $(WFLAGS) -o carrera
+test: test/pruebas_unitarias.c code/materias.c
+	$(CC) test/pruebas_unitarias.c code/materias.c $(CFLAGS) $(WFLAGS) -o test/prueba
+	./test/prueba
+val_test: test
+	$(V) $(VFLAGS) ./test/prueba $(ARCHIVOS)
 exe: carrera
 	./carrera $(ARCHIVOS) 
 help: carrera
