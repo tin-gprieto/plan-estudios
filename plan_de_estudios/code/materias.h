@@ -1,12 +1,9 @@
 #ifndef __MATERIAS_H__
 #define __MATERIAS_H__
 
-#include <stdio.h>
-#include <stdbool.h>
+#include "tools.h"
 
-#define MAX_MATERIA 40
-#define MAX_CODIGOS 5
-#define ERROR -1
+#define MAX_NOMBRE 50
 
 #define FORMATO_R "%li;%[^;];%c;%i;%[^\n]"
 #define FORMATO_W "%li;%s;%c;%i;%s"
@@ -16,33 +13,27 @@
 #define HABILITADA 'H'
 #define PENDIENTE 'P'
 
-#define RESET "\e[0m"
-#define ROJO "\e[31m"
-#define VERDE "\e[32m"
-#define AMARILLO "\e[33m"
-#define ROSA "\e[35m"
-#define CYAN "\e[36m"
-
-#define TILDE "✓"
-#define CRUZ "✗"
-
-typedef struct correlativas{
-  long int codigos[MAX_CODIGOS];
-  void* direcciones[MAX_CODIGOS];
-  int cantidad;
-} correlativas_t;
-
-typedef struct materia{
+//Informacion de lista
+typedef struct info{
   long int codigo;
-  char nombre[MAX_MATERIA];
+  char nombre[MAX_NOMBRE];
   char estado;
   int nota;
-  correlativas_t correlativas;
+}info_t;
+
+//Nodo lista
+typedef struct materia{
+  info_t info;
+  struct materia* anterior;
+  struct materia* proximo;
+  struct materia** correlativas;
+  size_t cant_correlativas;
 } materia_t;
 
+//Lista doblemente enlazada
 typedef struct carrera{
-  materia_t* materias;
-  int cantidad_materias;
+  materia_t* origen;
+  size_t cantidad_materias;
 } carrera_t;
 
 /*
@@ -58,11 +49,11 @@ carrera_t* crear_carrera(char* ruta_archivo);
 void liberar_carrera(carrera_t* carrera);
 
 /*
-* Busca en una carrera una materia y muestra su estado y todas sus correlativas
+* Busca en una materia según su código y la devuelve como puntero
 * Necesita la carrera creada y que el codigo sea válido
-* ERROR si no exite la carrera o no está la materia
+* NULL si no exite la carrera o no está la materia
 */
-int buscar_materia(carrera_t* carrera, long int codigo_materia);
+materia_t* buscar_materia(carrera_t* carrera, long int codigo_materia);
 
 /*
 * Elimina una materia de la carrera mediante un código por parámetro
@@ -79,12 +70,12 @@ int eliminar_materia(carrera_t* carrera, long int codigo_materia);
 int agregar_materia(carrera_t* carrera, materia_t materia);
 
 /*
-* Recibe una materia y el usurio modifica estado o nota 
+* Recibe una materia y el usuario modifica estado o nota 
 * (cambiar una materia a aprobada o cursada)(reemplazandola en la carrera)
 * Necesita la carrera creada y que una materia de la carrera
 * ERROR si no exite la carrera o no está la materia
 */
-int modificar_materia(carrera_t* carrera, materia_t materia);
+int modificar_materia(carrera_t* carrera, long int codigo_materia);
 
 /*
 * Busca que todas las materias pendientes no tengan todas las correlativas aprobadas
@@ -100,6 +91,15 @@ void actualizar_carrera(carrera_t* carrera);
 */
 int guardar_archivo(carrera_t* carrera, char* ruta_archivo);
 
+/*
+*Itera sobre todos las materias de la carrera y aplica
+*la funcion en cada una de ellas. Una vez la funcion 
+devuelva falso, cortará la iteracion devolviendo la cantidad
+de materias recorridas. La funcion debe un párametro a la materia
+y otro a un elemento extra a uso del usuario.
+*
+*/
+size_t iterrar_carrera(carrera_t* carrera, bool (*funcion)(materia_t*, void*), void* extra);
 
 
 #endif /* __MATERIAS_H__ */

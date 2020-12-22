@@ -3,10 +3,12 @@
 #include <string.h>
 #include <stdbool.h>
 #include "materias.h"
+#include "tools.h"
 
 #define AYUDA "--help"
 #define AYUDA_CSV "--csv"
 #define MAX_RUTA 50
+#define MAX_BARRA 10
 
 const int AGREGAR = 1;
 const int ELIMINAR = 2;
@@ -16,9 +18,6 @@ const int LISTAR_CARRERA = 5;
 const int LISTAR_APROBADAS = 6;
 const int LISTAR_HABILITADAS = 7;
 const int SALIR = 0;
-
-const char SI = 's';
-const char NO = 'n';
 
 /*
 *Muestra por pantalla una ayuda básica de como ejecutar correctamente
@@ -131,24 +130,32 @@ bool continua_usuario(int* modo){
         return false;
     }
     return true;
+}
+
+
+void pedir_materia(carrera_t* carrera, materia_t* materia){
+
+}
+
+void pedir_codigo(carrera_t* carrera, int* codigo_materia){
 
 }
 
 int ejecutar_modificacion (int modo, carrera_t* carrera, char* ruta_archivo){
-    int estado = 0;
+    int estado;
 
     if(modo == AGREGAR){
         materia_t materia;
-        pedir_materia(&materia, !esta_en_carrera(carrera, materia));
-        estado=agregar_materia(carrera, materia);
+        pedir_materia(carrera, &materia); 
+        estado = agregar_materia(carrera, materia);
     }else if(modo==MODIFICAR){
-        materia_t materia;
-        pedir_materia(&materia, esta_en_carrera(carrera, materia));
-        estado = modificar_materia(carrera, materia);
-    }else if(modo == ELIMINAR){
         int codigo_materia;
         pedir_codigo(carrera, &codigo_materia);
-        estado=eliminar_materia(carrera, codigo_materia);
+        estado = modificar_materia(carrera, codigo_materia);
+    }else if(modo == ELIMINAR){
+        int codigo_materia;
+        pedir_codigo(carrera, &codigo_materia); 
+        estado = eliminar_materia(carrera, codigo_materia);
     }
 
     if(estado != ERROR)
@@ -158,28 +165,56 @@ int ejecutar_modificacion (int modo, carrera_t* carrera, char* ruta_archivo){
 }
 
 /*
-* Muestra todas las materias de la carrera 
-*y muestra el porcentaje completado de la carrera
-* Necesita la carrera creada
+*Muestra una materia por pantalla según su estado
+*Pre: Carrera creada
 */
-void listar_carrera(carrera_t* carrera){
-
+bool mostrar_materias(materia_t* materia, void* contador){
+    if(materia->info.estado == APROBADA){
+        printf( VERDE "%s %li-%s : %i " RESET "\n", TILDE, 
+                                                   materia->info.codigo, 
+                                                   materia->info.nombre, 
+                                                   materia->info.nota);
+        (*(size_t*)contador) ++;
+    }else if (materia->info.estado == CURSADA){
+        printf(AMARILLO "- %li-%s : %i (parcial) " RESET "\n", materia->info.codigo, 
+                                                               materia->info.nombre, 
+                                                               materia->info.nota);
+    }else if (materia->info.estado == HABILITADA){
+        printf(". %li-%s \n", materia->info.codigo, materia->info.nombre);
+    }else if (materia->info.estado == PENDIENTE){
+        printf(ROJO "%s %li-%s" RESET "\n", CRUZ, materia->info.codigo, materia->info.nombre);
+    }else{
+        printf(CYAN ". %li-%s " ROJO "! TIENE UN ESTADO INVÁLIDO" RESET "\n",materia->info.codigo, 
+                                                                             materia->info.nombre);
+    }
+    return true;
 }
+
 
 /*
 * Muestra las materias aprobadas y el promedio entre todas las aprobadas
 * Necesita la carrera creada
 */
-void listar_aprobadas(carrera_t* carrera){
-
+bool mostrar_aprobadas(materia_t* materia, void* contador){
+    if(materia->info.estado == APROBADA){
+        (*(size_t *)contador) ++;
+        printf( VERDE "%s %li-%s : %i " RESET "\n", TILDE, 
+                                                   materia->info.codigo, 
+                                                   materia->info.nombre, 
+                                                   materia->info.nota);
+                        
+    }
+    return true; 
 }
 
 /*
 * Muestra las materias que se pueden cursar
 * Necesita la carrera creada
 */
-void listar_habilitadas(carrera_t* carrera){
-
+bool mostrar_habilitadas(materia_t* materia, void* contador){
+    if (materia->info.estado == HABILITADA)
+        printf(". %li-%s \n", materia->info.codigo, materia->info.nombre);
+    return true;
 }
 
 int ejecutar_mostrar(int modo, carrera_t* carrera){
@@ -187,17 +222,26 @@ int ejecutar_mostrar(int modo, carrera_t* carrera){
     if(modo == BUSCAR){
         int codigo_materia;
         pedir_codigo(carrera, &codigo_materia);
-        return buscar_materia(carrera, codigo_materia);
+        materia_t* materia = buscar_materia(carrera, codigo_materia);
+        if(!materia)
+            return ERROR;
+        return EXITO;
     }
 
-    if(modo == LISTAR_CARRERA)
-        listar_carrera(carrera);
-    if(modo == LISTAR_APROBADAS)
-        listar_aprobadas(carrera);
-    if(modo == LISTAR_HABILITADAS)
-        listar_habilitadas(carrera);
+    if(modo == LISTAR_CARRERA){
+        size_t materias_aprobadas = 0;
+        iterrar_carrera(carrera, mostrar_materias, (void*)&materias_aprobadas);
+        print_porcentage_bar(materias_aprobadas, carrera->cantidad_materias);
+    }else if(modo == LISTAR_APROBADAS){
+        size_t materias_aprobadas = 0;
+        iterrar_carrera(carrera, mostrar_aprobadas, (void*)&materias_aprobadas);
+        print_porcentage_bar(materias_aprobadas, carrera->cantidad_materias);
+        //promedio
+    }else if(modo == LISTAR_HABILITADAS){
+        iterrar_carrera(carrera, mostrar_habilitadas, NULL);
+    }
     
-    return 0;
+    return EXITO;
 }
 
 /*
@@ -215,7 +259,7 @@ int ejecutar_programa(int modo, carrera_t* carrera, char* ruta_archivo){
     
     if(es_modificacion(modo)){
         return ejecutar_modificacion(modo, carrera, ruta_archivo);
-    }else {
+    }else{
         return ejecutar_mostrar(modo, carrera);
     }
     return 0;
@@ -230,12 +274,12 @@ int main(int argc, char* argv[]){
 
     if (strcmp(argv[1], AYUDA) == 0){
         mostrar_ayuda();
-        return 0;
+        return EXITO;
     }
 
     if (strcmp(argv[1], AYUDA_CSV) == 0){
         mostrar_csv_ayuda();
-        return 0;
+        return EXITO;
     }
     char ruta_archivo[MAX_RUTA];
     strcpy(ruta_archivo, argv[1]);
@@ -267,5 +311,5 @@ int main(int argc, char* argv[]){
     }   
     
     printf( VERDE "%s Ha salido exitosamente del programa" RESET "\n", TILDE);
-    return 0;
+    return EXITO;
 }
