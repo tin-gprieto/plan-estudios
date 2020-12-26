@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include "materias.h"
-#include "tools.h"
+#include "../toolbox/tools.h"
 
 #define AYUDA "--help"
 #define AYUDA_CSV "--csv"
@@ -170,21 +170,21 @@ int ejecutar_modificacion (int modo, carrera_t* carrera, char* ruta_archivo){
 */
 bool mostrar_materias(materia_t* materia, void* contador){
     if(materia->info.estado == APROBADA){
-        printf( VERDE "%s %li-%s : %i " RESET "\n", TILDE, 
+        printf( VERDE "%s %i-%s : %i " RESET "\n", TILDE, 
                                                    materia->info.codigo, 
                                                    materia->info.nombre, 
                                                    materia->info.nota);
         (*(size_t*)contador) ++;
     }else if (materia->info.estado == CURSADA){
-        printf(AMARILLO "- %li-%s : %i (parcial) " RESET "\n", materia->info.codigo, 
+        printf(AMARILLO "- %i-%s : %i (parcial) " RESET "\n", materia->info.codigo, 
                                                                materia->info.nombre, 
                                                                materia->info.nota);
     }else if (materia->info.estado == HABILITADA){
-        printf(". %li-%s \n", materia->info.codigo, materia->info.nombre);
+        printf(". %i-%s \n", materia->info.codigo, materia->info.nombre);
     }else if (materia->info.estado == PENDIENTE){
-        printf(ROJO "%s %li-%s" RESET "\n", CRUZ, materia->info.codigo, materia->info.nombre);
+        printf(ROJO "%s %i-%s" RESET "\n", CRUZ, materia->info.codigo, materia->info.nombre);
     }else{
-        printf(CYAN ". %li-%s " ROJO "! TIENE UN ESTADO INVÁLIDO" RESET "\n",materia->info.codigo, 
+        printf(CYAN ". %i-%s " ROJO "! TIENE UN ESTADO INVÁLIDO" RESET "\n",materia->info.codigo, 
                                                                              materia->info.nombre);
     }
     return true;
@@ -198,7 +198,7 @@ bool mostrar_materias(materia_t* materia, void* contador){
 bool mostrar_aprobadas(materia_t* materia, void* contador){
     if(materia->info.estado == APROBADA){
         (*(size_t *)contador) ++;
-        printf( VERDE "%s %li-%s : %i " RESET "\n", TILDE, 
+        printf( VERDE "%s %i-%s : %i " RESET "\n", TILDE, 
                                                    materia->info.codigo, 
                                                    materia->info.nombre, 
                                                    materia->info.nota);
@@ -213,7 +213,7 @@ bool mostrar_aprobadas(materia_t* materia, void* contador){
 */
 bool mostrar_habilitadas(materia_t* materia, void* contador){
     if (materia->info.estado == HABILITADA)
-        printf(". %li-%s \n", materia->info.codigo, materia->info.nombre);
+        printf(". %i-%s \n", materia->info.codigo, materia->info.nombre);
     return true;
 }
 
@@ -271,45 +271,37 @@ int main(int argc, char* argv[]){
         printf(ROJO "NO ingresaste ningún comando. '--help' para ayuda" RESET "\n");
         return ERROR;
     }
-
     if (strcmp(argv[1], AYUDA) == 0){
         mostrar_ayuda();
         return EXITO;
     }
-
     if (strcmp(argv[1], AYUDA_CSV) == 0){
         mostrar_csv_ayuda();
         return EXITO;
     }
+
     char ruta_archivo[MAX_RUTA];
     strcpy(ruta_archivo, argv[1]);
-
     int modo_programa;
     int estado = 0;
     carrera_t* carrera = NULL;
-
     determinar_modo(&modo_programa);
-
     if (modo_programa != SALIR){
         carrera = crear_carrera(ruta_archivo);
         if (!carrera)
             return ERROR;
     }
-    
     while((modo_programa != SALIR) && (estado != ERROR)){
         estado = ejecutar_programa(modo_programa, carrera, ruta_archivo);
         if (estado != ERROR)
             if(continua_usuario(&modo_programa))
                 determinar_modo(&modo_programa);
     }
-
     liberar_carrera(carrera);
-
     if(estado == ERROR){
         printf( ROJO "%s El programa ha terminado por un ERROR" RESET "\n", CRUZ);
         return ERROR;
-    }   
-    
+    }     
     printf( VERDE "%s Ha salido exitosamente del programa" RESET "\n", TILDE);
     return EXITO;
 }

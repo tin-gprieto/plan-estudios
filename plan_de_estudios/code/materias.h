@@ -1,13 +1,12 @@
 #ifndef __MATERIAS_H__
 #define __MATERIAS_H__
 
-#include "tools.h"
+#include "../toolbox/tools.h"
 
 #define MAX_NOMBRE 50
+#define MAX_STRING 30
 
-#define FORMATO_R "%li;%[^;];%c;%i;%[^\n]"
-#define FORMATO_W "%li;%s;%c;%i;%s"
-
+//Estados
 #define APROBADA 'A'
 #define CURSADA 'C'
 #define HABILITADA 'H'
@@ -15,19 +14,25 @@
 
 //Informacion de lista
 typedef struct info{
-  long int codigo;
+  int codigo;
   char nombre[MAX_NOMBRE];
   char estado;
   int nota;
 }info_t;
 
+//Conexión de correlativas
+typedef struct correlativa {
+  char str[MAX_STRING];
+  struct materia** vector;
+  size_t cantidad;
+}correlativa_t;
+
 //Nodo lista
 typedef struct materia{
   info_t info;
+  correlativa_t correlativas;
   struct materia* anterior;
   struct materia* proximo;
-  struct materia** correlativas;
-  size_t cant_correlativas;
 } materia_t;
 
 //Lista doblemente enlazada
@@ -47,6 +52,16 @@ carrera_t* crear_carrera(char* ruta_archivo);
 *(puntero a materias, puntero de correlativas, carrera)
 */
 void liberar_carrera(carrera_t* carrera);
+
+/*
+*Devuelve verdadero si la carrera está vacia (no tiene materias asignadas)
+*/
+bool carrera_vacia(carrera_t* carrera);
+
+/*
+*Devuelve la cantidad de materias que tiene la carrera
+*/
+size_t cantidad_materias(carrera_t* carrera);
 
 /*
 * Busca en una materia según su código y la devuelve como puntero
