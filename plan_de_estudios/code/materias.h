@@ -20,38 +20,23 @@ typedef struct info{
   int nota;
 }info_t;
 
-//Conexión de correlativas
-typedef struct correlativa {
-  char str[MAX_STRING];
-  struct materia** vector;
-  size_t cantidad;
-}correlativa_t;
-
-//Nodo lista
 typedef struct materia{
   info_t info;
-  correlativa_t correlativas;
-  struct materia* anterior;
-  struct materia* proximo;
+  lista_t* codigos_correlativas;
 } materia_t;
 
-//Lista doblemente enlazada
-typedef struct carrera{
-  materia_t* origen;
-  size_t cantidad_materias;
-} carrera_t;
 
 /*
 * Crea la carrera en memoria dinámica a partir de un archivo csv (direccion)
 * Devuelve NULL si no puede crearlo
 */
-carrera_t* crear_carrera(char* ruta_archivo);
+hash_t* carrera_crear(char* ruta_archivo);
 
 /*
 * Libera la memoria reservada para toda la carrera 
 *(puntero a materias, puntero de correlativas, carrera)
 */
-void liberar_carrera(carrera_t* carrera);
+void carrera_destuir(carrera_t* carrera);
 
 /*
 *Devuelve verdadero si la carrera está vacia (no tiene materias asignadas)

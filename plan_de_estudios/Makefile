@@ -1,4 +1,3 @@
-CC= gcc
 V= valgrind
 GDB= gdb
 CFLAGS= -std=c99 -g -O0
@@ -15,8 +14,9 @@ TEST_EXTRA_FILE=test/extra.c
 
 TEST_LIB= toolbox/tools.c code/materias.c
 TEST_EXE= test/prueba.exe
+TEST_EXTRA_EXE= test/extra.exe
 
-ARCHIVOS= txt/materias.csv
+ARCHIVOS= txt/ing_informatica_1886.csv
 
 $(EXE): $(CFILE) $(LIB_FILE)
 	clear
@@ -27,7 +27,8 @@ $(TEST_EXE): $(TEST_FILE) $(TEST_LIB)
 test: $(TEST_EXE)
 	clear
 	$(V) $(VFLAGS) ./$(TEST_EXE)
-test_extra: $(TEST_EXTRA_EXE)
+test_extra:
+	$(CC) $(TEST_EXTRA_FILE) $(TEST_LIB) $(CFLAGS) $(WFLAGS) -o $(TEST_EXTRA_EXE)
 	clear
 	$(V) $(VFLAGS) ./$(TEST_EXE)
 exe: $(EXE)
