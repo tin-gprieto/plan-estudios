@@ -1,4 +1,5 @@
 .vscode/
 plan_de_estudios/test/extra.c
 plan_de_estudios/workspace.code-workspace
+toolbox/test/*.exe
 Proyectos_personales.code-workspace
