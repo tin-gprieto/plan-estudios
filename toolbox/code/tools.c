@@ -25,7 +25,7 @@ char* leer_linea(char* buffer, int tam_buffer, FILE* archivo){
     if(!linea_leida)
         return NULL;
 
-    int final_linea = strlen(linea_leida);
+    size_t final_linea = strlen(linea_leida);
 
     if(final_linea == 0 || linea_leida[final_linea - 1] != '\n'){
         char basura[1024];

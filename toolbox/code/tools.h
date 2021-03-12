@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include <signal.h>
+#include <stddef.h>
 
 #define ERROR -1
 #define EXITO 0
@@ -27,10 +28,10 @@
 #define VERDE "\e[0;32m"
 #define AMARILLO "\e[0;33m"
 #define AZUL "\e[0;34m"
+#define CELESTE "\e[1;34m"
 #define ROSA "\e[0;35m"
 #define CYAN "\e[0;36m"
 #define BLANCO "\e[0;37m"
-
 
 #define FONDO_NEGRO "\e[1;40m"
 #define FONDO_ROJO "\e[1;41m"
