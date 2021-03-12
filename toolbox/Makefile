@@ -4,10 +4,11 @@ GFLAGS = -tui
 WFLAGS = -Wall -Wconversion -Werror
 VFLAGS = --leak-check=full --track-origins=yes --show-reachable=yes
 
-TOOLS = code/tools.c
+TOOLS = code/tools/tools.c
+INTERFAZ = code/interfaz/interfaz.c
 
-test/interfaz.exe: code/interfaz.c $(TOOLS)
-	$(CC) test/test_interfaz.c code/interfaz.c $(TOOLS) $(CFLAGS) $(WFLAGS) -o test/interfaz.exe
+test/interfaz.exe: $(INTERFAZ) $(TOOLS)
+	$(CC) test/test_interfaz.c $(INTERFAZ) $(TOOLS) $(CFLAGS) $(WFLAGS) -o test/interfaz.exe
 
-exe interfaz: test/interfaz.exe test/test_interfaz.c
+exe interfaz: test/interfaz.exe $(INTERFAZ)
 	$(V) $(VFLAGS) ./test/interfaz.exe

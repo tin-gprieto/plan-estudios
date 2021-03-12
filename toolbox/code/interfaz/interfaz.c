@@ -1,5 +1,5 @@
 #include "interfaz.h"
-#include "tools.h"
+#include "../tools/tools.h"
 
 #define FONDO "\e[1;44m"
 #define LIMPIAR "clear"

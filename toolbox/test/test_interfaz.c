@@ -1,5 +1,5 @@
-#include "../code/interfaz.h"
-#include "../code/tools.h"
+#include "../code/interfaz/interfaz.h"
+#include "../code/tools/tools.h"
 
 typedef struct estructura{
     int numero[4];
