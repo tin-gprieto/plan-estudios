@@ -1,6 +1,4 @@
 #include "materias.h"
-#include "../../toolbox/code/tools.h"
-#include "../../toolbox/code/interfaz.h"
 
 #define AYUDA "--help"
 #define MAX_BARRA 10
@@ -9,26 +7,32 @@ const int MAX_INTERFAZ               = 80;
 const int MARGEN_INTERFAZ            = 20;
 const int ESPACIO_INTERFAZ           = 20;
 
-const int PROGRAMA_INICIO            = 0;
-const char OPCION_MODIFICAR          = 'A';
-const char OPCION_MOSTRAR            = 'B';
-const char OPCION_ARCHIVO            = 'C';
 
-const int PROGRAMA_MODIFICAR         = 1;
-const char OPCION_AGREGAR            = 'A';
-const char OPCION_ELIMINAR           = 'B';
-const char OPCION_MODIFICAR          = 'C';
-const char OPCION_BUSCAR             = 'D';
-
-const int PROGRAMA_MOSTRAR           = 2;
+const size_t MENU_PRINCIPAL          = 0;
 const char OPCION_LISTAR_CARRERA     = 'A';
 const char OPCION_LISTAR_APROBADAS   = 'B';
 const char OPCION_LISTAR_HABILITADAS = 'C';
+const char OPCION_MATERIA            = 'D';
+const char OPCION_MODIFICAR          = 'E';
 
-const int PROGRAMA_SALIR = 3;
+const size_t MENU_MATERIA            = 1;
+const char OPCION_ESTADO             = 'A';
+const char OPCION_NOTA               = 'B';
+ 
+const int PROGRAMA_PRINCIPAL         = 1;
+const int PROGRAMA_MATERIA           = 2;
+const int PROGRAMA_SALIR             = 3;
+
+const size_t INFO_INICIO             = 0;
+const size_t INFO_CARRERA            = 1;
+const size_t INFO_APROBADAS          = 2;
+const size_t INFO_HABILITADAS        = 3;
+const size_t INFO_MATERIA            = 4;
+
+#define CSV ".csv"
 
 typedef struct programa{
-    int modo_programa;
+    int estado;
     char* ruta_archivo;
     interfaz_t* interfaz;
     hash_t* carrera; 
@@ -46,6 +50,16 @@ void mostrar_ayuda(){
     printf("* Nota: -1 si no cuenta con nota de cursada o de promoción \n");
     printf("* Correlativas: codigos de las materias, separados por '.' \n");
 }
+
+/*
+*
+* Pre : 
+* Post:
+*/
+void mostrar_inicio(interfaz_t* interfaz, void* vacio, void* aux_vacio){
+    informacion_imprimir_linea(interfaz, ROJO, "Para continuar debe ingresar el archivo del plan de estudios (.csv)");
+}
+
 /*
 *
 * Pre : 
@@ -53,22 +67,32 @@ void mostrar_ayuda(){
 */
 int inicializar_interfaz(interfaz_t* interfaz){
     int estado = EXITO;
-    estado = menu_insertar(interfaz, "MENU INICIO", ROJO);
+
+    estado = menu_insertar(interfaz, "PLAN DE ESTUDIOS");
     if(estado == ERROR) return ERROR;
-    estado = menu_insertar(interfaz, "MODIFICAR ARCHIVO", CYAN);
+
+    estado = menu_insertar(interfaz, "MODIFICAR MATERIA");
     if(estado == ERROR) return ERROR;
-    estado = menu_insertar(interfaz, "MOSTRAR MATERIAS", ROSA);
-    if(estado == ERROR) return ERROR;
-    cargar_opcion(interfaz, 0, OPCION_MODIFICAR, "Modifiar materias del archivo");
-    cargar_opcion(interfaz, 0, OPCION_MOSTRAR, "Mostrar por pantalla materias");
-    cargar_opcion(interfaz, 0, OPCION_ARCHIVO, "Ingresar la ruta del archivo de materias");
-    cargar_opcion(interfaz, 1, OPCION_AGREGAR, "Agregar nueva materia a la carrera");
-    cargar_opcion(interfaz, 1, OPCION_ELIMINAR, "Eliminar materia de la carrera");
-    cargar_opcion(interfaz, 1, OPCION_MODIFICAR, "Modificar estado o nota de una materia");
-    cargar_opcion(interfaz, 1, OPCION_BUSCAR, "Buscar una materia de la carrera (por codigo)");
-    cargar_opcion(interfaz, 2, OPCION_LISTAR_CARRERA, "Mostrar todas las materias de la carrera");
-    cargar_opcion(interfaz, 2, OPCION_LISTAR_APROBADAS, "Mostrar las materias aprobadas");
-    cargar_opcion(interfaz, 2, OPCION_LISTAR_HABILITADAS, "Mostrar las materias habiles para cursar");
+
+    //Menú de opciones
+    menu_cargar_opcion(interfaz, MENU_PRINCIPAL, OPCION_LISTAR_CARRERA, "Mostrar todas las materias de la carrera");
+    menu_cargar_opcion(interfaz, MENU_PRINCIPAL, OPCION_LISTAR_APROBADAS, "Mostrar las materias aprobadas");
+    menu_cargar_opcion(interfaz, MENU_PRINCIPAL, OPCION_LISTAR_HABILITADAS, "Mostrar las materias habiles para cursar");
+    menu_cargar_opcion(interfaz, MENU_PRINCIPAL, OPCION_MATERIA, "Buscar una materia de la carrera (por codigo)");
+    menu_cargar_opcion(interfaz, MENU_PRINCIPAL, OPCION_MODIFICAR, "Modificar una materia de la carrera");
+    
+    //Menú para modificar una materia
+    menu_cargar_opcion(interfaz, MENU_MATERIA, OPCION_NOTA, "Modificar nota");
+    menu_cargar_opcion(interfaz, MENU_MATERIA, OPCION_ESTADO, "Modificar estado");
+    
+    //Menús Información
+    informacion_insertar(interfaz, "REQUISITOS", mostrar_inicio);
+    informacion_insertar(interfaz, "Materias de la carrera", mostrar_carrera);
+    informacion_insertar(interfaz, "Materias Aprobadas", mostrar_materias_aprobadas);
+    informacion_insertar(interfaz, "Materias Habilitadas para cursar", mostrar_materias_habilitadas);
+    informacion_insertar(interfaz, "Materia Seleccionada", mostrar_materia);
+
+    return estado;
 }
 /*
 *
@@ -91,7 +115,7 @@ programa_t* programa_crear(){
     programa_t* programa = malloc(sizeof(programa_t));
     if(!programa)
         return NULL;
-    programa->interfaz = interfaz_crear(MAX_INTERFAZ, MARGEN_INTERFAZ, ESPACIO_INTERFAZ);
+    programa->interfaz = interfaz_crear(set_dimension(70,20,10), set_estetica(FONDO_NEGRO, BLANCO, CELESTE));
     if(!programa->interfaz){
         programa_destruir(programa);
         return NULL;
@@ -101,106 +125,43 @@ programa_t* programa_crear(){
         programa_destruir(programa);
         return NULL;
     }
-    programa->modo_programa = PROGRAMA_INICIO;
     programa->carrera = NULL;
     return programa;
 }
+
 /*
-*
+* 
 * Pre : 
-* Post:
+* Post: 
 */
-void pedir_materia(carrera_t* carrera, materia_t* materia){
-
+void buscar_materia(programa_t* programa){
+    programa->estado = PROGRAMA_MATERIA;
+    char* codigo = pedir_codigo(programa->interfaz, programa->carrera);
+    informacion_mostrar(programa->interfaz, INFO_MATERIA, programa->carrera, codigo);
+    if(interfaz_estado(programa->interfaz) == OPCION_VOLVER)
+        programa->estado = PROGRAMA_PRINCIPAL;
 }
+
 /*
-*
+* 
 * Pre : 
-* Post:
+* Post: 
 */
-void pedir_codigo(carrera_t* carrera, int* codigo_materia){
-
-}
-/*
-*
-* Pre : 
-* Post:
-*/
-int ejecutar_modificacion (programa_t* programa){
-    menu_mostrar(programa->interfaz, PROGRAMA_MODIFICAR);
-    if(interfaz_estado(programa->interfaz) == OPCION_AGREGAR){
-        materia_t materia;
-        pedir_materia(carrera, &materia); 
-        estado = agregar_materia(carrera, materia);
-    }else if(interfaz_estado(programa->interfaz)== OPCION_MODIFICAR){
-        int codigo_materia;
-        pedir_codigo(carrera, &codigo_materia);
-        estado = modificar_materia(carrera, codigo_materia);
-    }else if(interfaz_estado(programa->interfaz) == OPCION_ELIMINAR){
-        int codigo_materia;
-        pedir_codigo(carrera, &codigo_materia); 
-        estado = eliminar_materia(carrera, codigo_materia);
+void modificar_materia(programa_t* programa){
+    programa->estado = PROGRAMA_MATERIA;
+    char* codigo = pedir_codigo(programa->interfaz, programa->carrera);
+    while(interfaz_estado(programa->interfaz) != OPCION_SALIR && programa->estado == PROGRAMA_MATERIA){
+        menu_mostrar(programa->interfaz, MENU_MATERIA);
+        if(interfaz_estado(programa->interfaz) == OPCION_ESTADO)
+            pedir_dato_materia(programa->interfaz, programa->carrera, codigo, PEDIR_ESTADO);
+        else if(interfaz_estado(programa->interfaz) == OPCION_NOTA)
+            pedir_dato_materia(programa->interfaz, programa->carrera, codigo, PEDIR_NOTA);
+        else if(interfaz_estado(programa->interfaz) == OPCION_VOLVER)
+            programa->estado = PROGRAMA_PRINCIPAL;
+        
+        if(interfaz_estado(programa->interfaz) != OPCION_SALIR && interfaz_estado(programa->interfaz) != OPCION_VOLVER)
+            informacion_mostrar(programa->interfaz, INFO_MATERIA, programa->carrera, codigo);
     }
-
-    if(estado != ERROR)
-        guardar_archivo(carrera, ruta_archivo);
-
-    return estado;
-}
-
-/*
-* Muestra una materia por pantalla según su estado
-* Pre : Carrera creada
-* Post:
-*/
-bool mostrar_materias(materia_t* materia, void* contador){
-    if(materia->info.estado == APROBADA){
-        printf( VERDE "%s %i - %s : %i " RESET "\n", TILDE, 
-                                                   materia->info.codigo, 
-                                                   materia->info.nombre, 
-                                                   materia->info.nota);
-        (*(size_t*)contador) ++;
-    }else if (materia->info.estado == CURSADA){
-        printf(AMARILLO "- %i - %s : %i (parcial) " RESET "\n", materia->info.codigo, 
-                                                               materia->info.nombre, 
-                                                               materia->info.nota);
-    }else if (materia->info.estado == HABILITADA){
-        printf(". %i - %s \n", materia->info.codigo, materia->info.nombre);
-    }else if (materia->info.estado == PENDIENTE){
-        printf(NEGRO ". %i - %s" RESET "\n", CRUZ, materia->info.codigo, materia->info.nombre);
-    }else{
-        printf(CYAN ". %i-%s " ROJO "! TIENE UN ESTADO INVÁLIDO" RESET "\n",materia->info.codigo, 
-                                                                             materia->info.nombre);
-    }
-    return true;
-}
-
-/*
-* Muestra las materias aprobadas y el promedio entre todas las aprobadas
-* Pre : Necesita la carrera creada
-* Post:
-*/
-bool mostrar_aprobadas(materia_t* materia, void* contador){
-    if(materia->info.estado == APROBADA){
-        (*(size_t *)contador) ++;
-        printf( VERDE "%s %i - %s : %i " RESET "\n", TILDE, 
-                                                   materia->info.codigo, 
-                                                   materia->info.nombre, 
-                                                   materia->info.nota);
-                        
-    }
-    return true; 
-}
-
-/*
-* Muestra las materias que se pueden cursar
-* Pre : Necesita la carrera creada
-* Post:
-*/
-bool mostrar_habilitadas(materia_t* materia, void* contador){
-    if (materia->info.estado == HABILITADA)
-        printf(". %i-%s \n", materia->info.codigo, materia->info.nombre);
-    return true;
 }
 
 /*
@@ -208,33 +169,37 @@ bool mostrar_habilitadas(materia_t* materia, void* contador){
 * Pre :
 * Post:
 */
-int ejecutar_mostrar(programa_t* programa){
-    menu_mostrar(programa->interfaz, PROGRAMA_MOSTRAR);
-    if(interfaz_estado(programa->interfaz) == OPCION_BUSCAR){
-        size_t codigo_materia = pedir_numero(programa->interfaz);
-        materia_t* materia = buscar_materia(carrera, codigo_materia);
-        while(!materia){
-            reportar_error("Código de materia incorrecto");
-            codigo_materia = pedir_numero(programa->interfaz);
-            materia = buscar_materia(carrera, codigo_materia);
-        }
-        mostrar_materia(materia);
-        return EXITO;
-    }
-    if(interfaz_estado(programa->interfaz) == OPCION_LISTAR_CARRERA){
-        size_t materias_aprobadas = 0;
-        iterrar_carrera(carrera, mostrar_materias, (void*)&materias_aprobadas);
-        print_porcentage_bar(materias_aprobadas, carrera->cantidad_materias);
-    }else if(interfaz_estado(programa->interfaz) == OPCION_LISTAR_APROBADAS){
-        size_t materias_aprobadas = 0;
-        iterrar_carrera(carrera, mostrar_aprobadas, (void*)&materias_aprobadas);
-        print_porcentage_bar(materias_aprobadas, carrera->cantidad_materias);
-        //promedio
-    }else if(interfaz_estado(programa->interfaz) == OPCION_LISTAR_HABILITADAS){
-        iterrar_carrera(carrera, mostrar_habilitadas, NULL);
-    }
+void ejecutar_programa(programa_t* programa){
     
-    return EXITO;
+    while(programa->estado == PROGRAMA_PRINCIPAL){
+        menu_mostrar(programa->interfaz, MENU_PRINCIPAL);
+        if(interfaz_estado(programa->interfaz) == OPCION_LISTAR_CARRERA)
+            informacion_mostrar(programa->interfaz, INFO_CARRERA, programa->carrera, NULL);
+        else if(interfaz_estado(programa->interfaz) == OPCION_LISTAR_APROBADAS)
+            informacion_mostrar(programa->interfaz, INFO_APROBADAS, programa->carrera, NULL);
+        else if(interfaz_estado(programa->interfaz) == OPCION_LISTAR_HABILITADAS)
+            informacion_mostrar(programa->interfaz, INFO_HABILITADAS, programa->carrera, NULL);
+        else if(interfaz_estado(programa->interfaz) == OPCION_MATERIA)
+            buscar_materia(programa);        
+        else if(interfaz_estado(programa->interfaz) == OPCION_MODIFICAR)
+            modificar_materia(programa);
+        
+        if(interfaz_estado(programa->interfaz) == OPCION_SALIR)
+            programa->estado = PROGRAMA_SALIR;
+    }
+        
+}
+
+void iniciar_programa(programa_t *programa){
+    informacion_mostrar(programa->interfaz, INFO_INICIO, NULL, NULL);
+    programa->ruta_archivo = interfaz_pedir_archivo(programa->interfaz, CSV, "ruta del archivo");
+    programa->carrera = carrera_crear(programa->ruta_archivo);
+    if(!programa->carrera){
+        programa_destruir(programa);
+        interfaz_reportar_error(programa->interfaz, "No se pudo cargar la información de la carrera");
+        programa->estado = ERROR;
+    }else
+        programa->estado = PROGRAMA_PRINCIPAL;
 }
 
 int main(int argc, char* argv[]){
@@ -244,37 +209,18 @@ int main(int argc, char* argv[]){
             mostrar_ayuda();
             return EXITO;
         }else
-            warning("el comando ingresado");
+            warning("EL COMANDO INGRESADO");
     }
     programa_t* programa = programa_crear();
     if(!programa){
-        warning("la creación del programa");
+        warning("LA CREACIÓN DEL PROGRAMA");
         return ERROR;
     }
+    iniciar_programa(programa);
+    if(programa->estado != ERROR)
+        ejecutar_programa(programa); 
 
-    while(interfaz_estado(programa->interfaz) != OPCION_ARCHIVO){
-        menu_mostrar(programa->interfaz, PROGRAMA_INICIO);
-        if(interfaz_estado(programa->interfaz) != OPCION_ARCHIVO)
-            reportar_error("Primero debe ingresarse el archivo");
-    }
-    programa->ruta_archivo = pedir_archivo_csv(programa->interfaz);
-    int carga = cargar_materias(programa->carrera, programa->ruta_archivo);
-    if(carga == ERROR){
-        programa_destruir(programa);
-        printf( ROJO "%s El programa ha terminado por un ERROR" RESET "\n", CRUZ);
-        return ERROR;
-    }
-    menu_eliminar_opcion(programa->interfaz, PROGRAMA_INICIO, OPCION_ARCHIVO);
-    menu_mostrar(programa->interfaz, PROGRAMA_INICIO);
-    while(interfaz_estado(programa->interfaz) != OPCION_SALIR && programa->modo_programa != ERROR){
-        if(interfaz_estado(programa->interfaz) == OPCION_VOLVER)
-            menu_mostrar(programa->interfaz, PROGRAMA_INICIO);
-        if(interfaz_estado(programa->interfaz) == OPCION_MODIFICAR)
-            ejecutar_modificacion(programa);
-        if(interfaz_estado(programa->interfaz) == OPCION_MOSTRAR)
-            ejecutar_mostrar(programa);
-    }
-    if(programa->modo_programa == ERROR){
+    if(programa->estado == ERROR){
         programa_destruir(programa);
         printf( ROJO "%s El programa ha terminado por un ERROR" RESET "\n", CRUZ);
         return ERROR;

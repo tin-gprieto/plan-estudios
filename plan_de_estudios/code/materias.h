@@ -1,30 +1,24 @@
 #ifndef __MATERIAS_H__
 #define __MATERIAS_H__
 
-#include "../toolbox/tools.h"
+#include "../toolbox/interfaz/interfaz.h"
+#include "../toolbox/tools/tools.h"
+#include "../toolbox/TDAs/lista/lista.h"
+#include "../toolbox/TDAs/hash/hash.h"
 
-#define MAX_NOMBRE 50
 #define MAX_STRING 30
+#define MAX_CODIGO 5
 
 //Estados
-#define APROBADA 'A'
-#define CURSADA 'C'
-#define HABILITADA 'H'
-#define PENDIENTE 'P'
+#define MATERIA_APROBADA 'A'
+#define MATERIA_CURSADA 'C'
+#define MATERIA_HABILITADA 'H'
+#define MATERIA_PENDIENTE 'P'
 
-//Informacion de lista
-typedef struct info{
-  int codigo;
-  char nombre[MAX_NOMBRE];
-  char estado;
-  int nota;
-}info_t;
+#define PEDIR_NOTA   0
+#define PEDIR_ESTADO 1
 
-typedef struct materia{
-  info_t info;
-  lista_t* codigos_correlativas;
-} materia_t;
-
+typedef struct materia materia_t;
 
 /*
 * Crea la carrera en memoria dinámica a partir de un archivo csv (direccion)
@@ -33,55 +27,54 @@ typedef struct materia{
 hash_t* carrera_crear(char* ruta_archivo);
 
 /*
-* Libera la memoria reservada para toda la carrera 
-*(puntero a materias, puntero de correlativas, carrera)
+* Funcion_grafica para la interfaz, que muestra la materia junto a sus correlativas
+* Pre : Interfaz creada, pasar carrera (hash_t*) y codigo_materia(const char*)
+* Post: Funcion gráfica para menú de información
 */
-void carrera_destuir(carrera_t* carrera);
+void mostrar_materia(interfaz_t* interfaz, void* carrera, void* codigo_materia);
 
 /*
-*Devuelve verdadero si la carrera está vacia (no tiene materias asignadas)
+* Funcion_grafica para la interfaz, que muestra todas las materias de la carrera
+* Pre : Interfaz creada, pasar carrera (hash_t*) y aux(NULL)
+* Post: Funcion gráfica para menú de información
 */
-bool carrera_vacia(carrera_t* carrera);
+void mostrar_carrera(interfaz_t* interfaz, void* carrera, void* aux);
 
 /*
-*Devuelve la cantidad de materias que tiene la carrera
+* Funcion_grafica para la interfaz, que muestra las materias habilitadas para cursar
+* Pre : Interfaz creada, pasar carrera (hash_t*) y aux(NULL)
+* Post: Funcion gráfica para menú de información
 */
-size_t cantidad_materias(carrera_t* carrera);
+void mostrar_materias_habilitadas(interfaz_t* interfaz, void* carrera, void* aux);
 
 /*
-* Busca en una materia según su código y la devuelve como puntero
-* Necesita la carrera creada y que el codigo sea válido
-* NULL si no exite la carrera o no está la materia
+* Funcion_grafica para la interfaz, que muestra las materias aprobadas
+* Pre : Interfaz creada, pasar carrera (hash_t*) y aux(NULL)
+* Post: Funcion gráfica para menú de información
 */
-materia_t* buscar_materia(carrera_t* carrera, long int codigo_materia);
+void mostrar_materias_aprobadas(interfaz_t* interfaz, void* carrera, void* aux);
 
 /*
-* Elimina una materia de la carrera mediante un código por parámetro
-* Devulve ERROR (-1) si el código no corresponde a una materia
+* Pide el código de un materia que pertenece o no (según el parámetro)
+* a la carrera y lo devuelve
+* Pre : 
+* Post:
 */
-int eliminar_materia(carrera_t* carrera, long int codigo_materia);
+char* pedir_codigo(interfaz_t* interfaz, hash_t* carrera);
 
 /*
-* Agrega una materia al final de la carrera
-* con caracteristicas que ingrese el usuario (no puede ser igual a otra materia)
-* Debe recibir una materia con todas las caracteristicas dadas
-* Devulve ERROR (-1) si el código de materia ya existe
+* Crea una nueva materia con los datos que ingrese el usuario
+* (Nombre, Nota, Estado, Correlativas)
+* Pre : 
+* Post:
 */
-int agregar_materia(carrera_t* carrera, materia_t materia);
-
-/*
-* Recibe una materia y el usuario modifica estado o nota 
-* (cambiar una materia a aprobada o cursada)(reemplazandola en la carrera)
-* Necesita la carrera creada y que una materia de la carrera
-* ERROR si no exite la carrera o no está la materia
-*/
-int modificar_materia(carrera_t* carrera, long int codigo_materia);
+void pedir_dato_materia(interfaz_t* interfaz, hash_t* carrera, char* codigo, size_t tipo_dato);
 
 /*
 * Busca que todas las materias pendientes no tengan todas las correlativas aprobadas
 * Necesita la carrera creada y una modificación para que sea útil actualizar
 */
-void actualizar_carrera(carrera_t* carrera);
+void actualizar_carrera(hash_t* carrera);
 
 /*
 * Guarda los datos nuevamente en el archivo 
@@ -89,17 +82,7 @@ void actualizar_carrera(carrera_t* carrera);
 * Necesita la carrera creada
 * Devuelve ERROR (-1) si tuvo problemas para abrir el archivo o si no existe carrera
 */
-int guardar_archivo(carrera_t* carrera, char* ruta_archivo);
-
-/*
-*Itera sobre todos las materias de la carrera y aplica
-*la funcion en cada una de ellas. Una vez la funcion 
-devuelva falso, cortará la iteracion devolviendo la cantidad
-de materias recorridas. La funcion debe un párametro a la materia
-y otro a un elemento extra a uso del usuario.
-*
-*/
-size_t iterrar_carrera(carrera_t* carrera, bool (*funcion)(materia_t*, void*), void* extra);
+int guardar_archivo(hash_t* carrera, char* ruta_archivo);
 
 
 #endif /* __MATERIAS_H__ */
